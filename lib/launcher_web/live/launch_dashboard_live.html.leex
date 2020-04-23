@@ -1,0 +1,33 @@
+<section class="row">
+  <section class="column">
+    <a href="/create">Create a launchctljob</a>
+    <button phx-click="toggle-fs-polling">
+      <%= if @timer do %>
+        Stop polling
+      <% else %>
+        Start polling
+      <% end %>
+    </button>
+    <%= for %{filename: file, pid: pid, status: status, label: label} <- @launchd_files do %>
+       <div>
+         <a href="#" phx-click="inspect-file" phx-value-filename=<%= file %>><%= file %></a>
+         <ul>
+           <li>Pid: <%= pid %></li>
+           <li>Status: <%= status %></li>
+           <li>Label: <%= label %></li>
+         </ul>
+       </div>
+    <% end %>
+  </section>
+</section>
+
+<%= if @active_file do %>
+  <section class="row">
+    <div>
+    <pre><code>
+      <%= @active_file %>
+    </code></pre>
+    </div>
+  </section>
+<% end %>
+
