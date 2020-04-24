@@ -17,17 +17,13 @@
            <li>Label: <%= label %></li>
          </ul>
        </div>
+       <%= if file_data = Map.get(@unfold_map, file) do %>
+         <div>
+           <pre><code>
+           <%= file_data %>
+           </code></pre>
+         </div>
+       <% end %>
     <% end %>
   </section>
 </section>
-
-<%= if @active_file do %>
-  <section class="row">
-    <div>
-    <pre><code>
-      <%= @active_file %>
-    </code></pre>
-    </div>
-  </section>
-<% end %>
-

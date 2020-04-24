@@ -19,12 +19,8 @@ defmodule LauncherWeb.LaunchDashboardLive do
       |> assign(
         timer: timer,
         launchd_files: [],
-        active_file: nil,
-        creating_as_xml_string: "",
         changeset: Jobs.change_job(%Job{}),
-        additional_fields: MapSet.new(),
-        run_at_load: false,
-        keepalive: false
+        unfold_map: %{}
       )
 
     {:ok, socket}
@@ -43,9 +39,18 @@ defmodule LauncherWeb.LaunchDashboardLive do
 
   @impl true
   def handle_event("inspect-file", %{"filename" => filename}, socket) do
-    string = File.read!(Path.join(@user_launchagents_path, filename))
-    file_as_map = XmlToMap.naive_map(string)
-    socket = assign(socket, active_file: string, active_file_as_map: file_as_map)
+    unfold_map = socket.assigns.unfold_map
+
+    unfold_map =
+      if Map.get(unfold_map, filename) do
+        Map.delete(unfold_map, filename)
+      else
+        t = Task.async(fn -> File.read!(Path.join(@user_launchagents_path, filename)) end)
+        Map.put(unfold_map, filename, Task.await(t))
+      end
+
+    socket = assign(socket, unfold_map: unfold_map)
+
     {:noreply, socket}
   end
 
@@ -98,8 +103,27 @@ defmodule LauncherWeb.LaunchDashboardLive do
             end
           end)
 
+        files_list_keys =
+          files
+          |> Enum.map(fn %{filename: filename} ->
+            filename
+          end)
+          |> Enum.into(MapSet.new())
+
+        unfold_map_keys =
+          socket.assigns.unfold_map
+          |> Map.keys()
+          |> Enum.into(MapSet.new())
+
+        unfold_map_keys_to_delete = MapSet.difference(unfold_map_keys, files_list_keys)
+
+        unfold_map =
+          Enum.reduce(unfold_map_keys_to_delete, socket.assigns.unfold_map, fn k, map ->
+            Map.delete(map, k)
+          end)
+
         socket
-        |> assign(launchd_files: files)
+        |> assign(launchd_files: files, unfold_map: unfold_map)
 
       {:error, reason} ->
         socket
