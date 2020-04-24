@@ -4,8 +4,7 @@ defmodule LauncherWeb.LaunchDashboardLive do
   import SweetXml
 
   @default_tick_interval :timer.seconds(5)
-  @user_launchd_path Path.join(["/Users", "clark", "Library", "LaunchAgents"])
-                     |> IO.inspect(label: "user launch agents path")
+  @user_launchagents_path Application.fetch_env!(:launcher, :user_launchagents_path)
 
   @impl true
   def mount(_params, _session, socket) do
@@ -44,7 +43,7 @@ defmodule LauncherWeb.LaunchDashboardLive do
 
   @impl true
   def handle_event("inspect-file", %{"filename" => filename}, socket) do
-    string = File.read!(Path.join(@user_launchd_path, filename))
+    string = File.read!(Path.join(@user_launchagents_path, filename))
     file_as_map = XmlToMap.naive_map(string)
     socket = assign(socket, active_file: string, active_file_as_map: file_as_map)
     {:noreply, socket}
@@ -56,7 +55,7 @@ defmodule LauncherWeb.LaunchDashboardLive do
   end
 
   def put_launchd_files(socket) do
-    case File.ls(@user_launchd_path) do
+    case File.ls(@user_launchagents_path) do
       {:ok, files} ->
         {s, 0} = System.cmd("launchctl", ["list"])
 
@@ -66,7 +65,7 @@ defmodule LauncherWeb.LaunchDashboardLive do
           files
           |> Enum.map(fn filename ->
             Task.async(fn ->
-              {filename, File.read!(Path.join(@user_launchd_path, filename))}
+              {filename, File.read!(Path.join(@user_launchagents_path, filename))}
             end)
           end)
           |> Enum.map(fn t ->

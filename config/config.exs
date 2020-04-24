@@ -8,6 +8,9 @@
 use Mix.Config
 
 config :launcher,
+  user_launchagents_path: Path.join([System.user_home!(), "Library", "LaunchAgents"])
+
+config :launcher,
   ecto_repos: [Launcher.Repo]
 
 # Configures the endpoint

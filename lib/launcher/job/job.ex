@@ -29,6 +29,9 @@ defmodule Launcher.Job do
     field :working_directory, :string
     field :start_interval, :integer
     field :keepalive, :boolean
+    field :standard_in_path, :string, default: ""
+    field :standard_out_path, :string, default: ""
+    field :standard_error_path, :string, default: ""
   end
 
   @doc false
@@ -41,19 +44,12 @@ defmodule Launcher.Job do
       :environment_variables,
       :working_directory,
       :start_interval,
-      :keepalive
+      :keepalive,
+      :standard_in_path,
+      :standard_out_path,
+      :standard_error_path
     ])
     |> cast_embed(:arguments)
     |> validate_required([:label, :program])
-
-    # |> validate_required([:username, :email, :phone_number])
-    # |> validate_confirmation(:password)
-    # |> validate_format(:username, ~r/^[a-zA-Z0-9_]*$/,
-    #   message: "only letters, numbers, and underscores please"
-    # )
-    # |> validate_length(:username, max: 12)
-    # |> validate_format(:email, ~r/.+@.+/, message: "must be a valid email address")
-    # |> validate_format(:phone_number, @phone, message: "must be a valid number")
-    # |> unique_constraint(:email)
   end
 end

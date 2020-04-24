@@ -13,10 +13,13 @@
       <%= error_tag f, :program %>
 
       <%= for arguments_form <- inputs_for(f, :arguments) do %>
+        <a href="#" phx-click="remove-arg" phx-value-id="<%= input_id(arguments_form, :value) %>">
+          remove arg
+        </a>
         <%= label arguments_form, :argument %>
-        <a href="#" phx-click="remove-arg" phx-value-id="<%= input_id(arguments_form, :value) %>">remove arg</a>
-        <%= hidden_inputs_for(arguments_form) %>
         <%= text_input arguments_form, :value %>
+        <%= hidden_inputs_for(arguments_form) %>
+        <%= error_tag arguments_form, :value %>
       <% end %>
 
       <div>
@@ -36,12 +39,29 @@
       </div>
 
       <div>
+      <%= label f, :standard_in_path %>
+      <%= text_input f, :standard_in_path %>
+      <%= error_tag f, :standard_in_path %>
+
+      <%= label f, :standard_out_path %>
+      <%= text_input f, :standard_out_path %>
+      <%= error_tag f, :standard_out_path %>
+
+      <%= label f, :standard_error_path %>
+      <%= text_input f, :standard_error_path %>
+      <%= error_tag f, :standard_error_path %>
+      </div>
+
+      <div>
         <%= submit "Save" %>
       </div>
 
     </form>
 
   </section>
+</section>
+
+<section class="row">
   <section class="column">
     <%= if @xml_string != "" do %>
     <pre><code>

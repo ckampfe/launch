@@ -3,6 +3,8 @@ defmodule LauncherWeb.LaunchCreateLive do
   alias Launcher.{Job, Jobs}
   import XmlBuilder
 
+  @user_launchagents_path Application.fetch_env!(:launcher, :user_launchagents_path)
+
   @impl true
   def mount(_params, _session, socket) do
     changeset =
@@ -29,10 +31,12 @@ defmodule LauncherWeb.LaunchCreateLive do
   end
 
   @impl true
-  def handle_event("validate", %{"job" => params}, socket) do
+  def handle_event("validate", %{"job" => attrs}, socket) do
     changeset =
       %Job{}
-      |> Launcher.Jobs.change_job(params)
+      |> Launcher.Jobs.change_job(attrs)
+      # this has to be here for errors to render
+      |> Map.put(:action, :edit)
       |> IO.inspect(label: "CS")
 
     if changeset.valid? do
@@ -40,6 +44,34 @@ defmodule LauncherWeb.LaunchCreateLive do
         socket
         |> assign(changeset: changeset)
         |> render_xml()
+
+      {:noreply, socket}
+    else
+      {:noreply, assign(socket, changeset: changeset)}
+    end
+  end
+
+  @impl true
+  def handle_event("save", %{"job" => attrs}, socket) do
+    changeset =
+      %Job{}
+      |> Launcher.Jobs.change_job(attrs)
+      |> Map.put(:action, :insert)
+      |> IO.inspect(label: "CS insert")
+
+    job_write_path = Path.join(@user_launchagents_path, "#{changeset.changes.label}.plist")
+
+    if changeset.valid? do
+      socket =
+        socket
+        |> assign(changeset: changeset)
+        |> render_xml()
+        |> put_flash(
+          :info,
+          "wrote job definition to #{job_write_path}"
+        )
+
+      File.write!(job_write_path, socket.assigns.xml_string)
 
       {:noreply, socket}
     else
@@ -99,7 +131,7 @@ defmodule LauncherWeb.LaunchCreateLive do
             "http://www.apple.com/DTDs/PropertyList-1.0.dtd"
           ]
         ),
-        element(:plist, [
+        element(:plist, %{version: "1.0"}, [
           element(
             :dict,
             elements
@@ -118,7 +150,7 @@ defmodule LauncherWeb.LaunchCreateLive do
     ]
 
     program_args =
-      if Enum.empty?(changeset.changes.arguments) do
+      if Enum.empty?(Map.get(changeset.changes, :arguments, [])) do
         [element(:key, "Program"), element(:string, changeset.changes.program)]
       else
         [
@@ -152,9 +184,36 @@ defmodule LauncherWeb.LaunchCreateLive do
         []
       end
 
+    standard_in_path =
+      if changeset.changes[:standard_in_path] do
+        [element(:key, "StandardInPath"), element(:string, changeset.changes.standard_in_path)]
+      else
+        []
+      end
+
+    standard_out_path =
+      if changeset.changes[:standard_out_path] do
+        [element(:key, "StandardOutPath"), element(:string, changeset.changes.standard_out_path)]
+      else
+        []
+      end
+
+    standard_error_path =
+      if changeset.changes[:standard_error_path] do
+        [
+          element(:key, "StandardErrorPath"),
+          element(:string, changeset.changes.standard_error_path)
+        ]
+      else
+        []
+      end
+
     label ++
       program_args ++
       run_at_load ++
-      keepalive
+      keepalive ++
+      standard_in_path ++
+      standard_out_path ++
+      standard_error_path
   end
 end
