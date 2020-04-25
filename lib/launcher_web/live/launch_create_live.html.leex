@@ -50,6 +50,27 @@
       <%= label f, :standard_error_path %>
       <%= text_input f, :standard_error_path %>
       <%= error_tag f, :standard_error_path %>
+
+      <%= for environment_variables_form <- inputs_for(f, :environment_variables) do %>
+        <a href="#" phx-click="remove-environment-variable" phx-value-id="<%= input_id(environment_variables_form, :value) %>">
+          remove envvar
+        </a>
+        <%= label environment_variables_form, :environment_variable %>
+
+        <%= label environment_variables_form, :key %>
+        <%= text_input environment_variables_form, :key %>
+        <%= hidden_inputs_for(environment_variables_form) %>
+        <%= error_tag environment_variables_form, :key %>
+
+        <%= label environment_variables_form, :value %>
+        <%= text_input environment_variables_form, :value %>
+        <%= hidden_inputs_for(environment_variables_form) %>
+        <%= error_tag environment_variables_form, :value %>
+      <% end %>
+
+      <div>
+        <a href="#" phx-click="add-environment-variable">add envvar</a>
+      </div>
       </div>
 
       <div>

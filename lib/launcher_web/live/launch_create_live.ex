@@ -14,6 +14,9 @@ defmodule LauncherWeb.LaunchCreateLive do
         arguments: [
           %{value: "arg1"},
           %{value: "arg2"}
+        ],
+        environment_variables: [
+          %{key: "PORT", value: "5000"}
         ]
       })
 
@@ -36,7 +39,7 @@ defmodule LauncherWeb.LaunchCreateLive do
       %Job{}
       |> Launcher.Jobs.change_job(attrs)
       # this has to be here for errors to render
-      |> Map.put(:action, :edit)
+      |> Map.put(:action, :insert)
       |> IO.inspect(label: "CS")
 
     if changeset.valid? do
@@ -115,7 +118,53 @@ defmodule LauncherWeb.LaunchCreateLive do
         arguments
       )
 
+    socket =
+      assign(socket, changeset: changeset)
+      |> render_xml()
+
+    {:noreply, socket}
+  end
+
+  def handle_event("add-environment-variable", _params, socket) do
+    var = %EnvironmentVariable{key: "", value: ""}
+
+    environment_variables =
+      Map.get(socket.assigns.changeset.changes, :environment_variables, []) ++ [var]
+
+    changeset =
+      socket.assigns.changeset
+      |> Ecto.Changeset.put_embed(
+        :environment_variables,
+        environment_variables
+      )
+
     socket = assign(socket, changeset: changeset)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove-environment-variable", %{"id" => id} = _params, socket) do
+    [idx | _] =
+      Regex.run(~r/\d+/, id)
+      |> Enum.map(fn s ->
+        {i, _} = Integer.parse(s)
+        i
+      end)
+
+    environment_variables =
+      socket.assigns.changeset.changes.environment_variables
+      |> List.delete_at(idx)
+
+    changeset =
+      socket.assigns.changeset
+      |> Ecto.Changeset.put_embed(
+        :environment_variables,
+        environment_variables
+      )
+
+    socket =
+      assign(socket, changeset: changeset)
+      |> render_xml()
 
     {:noreply, socket}
   end
@@ -208,12 +257,31 @@ defmodule LauncherWeb.LaunchCreateLive do
         []
       end
 
+    environment_variables =
+      if vars = Map.get(changeset.changes, :environment_variables) do
+        [
+          element(:key, "EnvironmentVariables"),
+          element(
+            :dict,
+            Enum.flat_map(vars, fn %{changes: %{key: key, value: value}} ->
+              [
+                element(:key, key),
+                element(:string, value)
+              ]
+            end)
+          )
+        ]
+      else
+        []
+      end
+
     label ++
       program_args ++
       run_at_load ++
       keepalive ++
       standard_in_path ++
       standard_out_path ++
-      standard_error_path
+      standard_error_path ++
+      environment_variables
   end
 end

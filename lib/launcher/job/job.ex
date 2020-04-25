@@ -15,6 +15,25 @@ defmodule Argument do
   end
 end
 
+defmodule EnvironmentVariable do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  embedded_schema do
+    field :key
+    field :value
+  end
+
+  def changeset(argument, attrs) do
+    argument
+    |> cast(attrs, [
+      :key,
+      :value
+    ])
+    |> validate_required([:key, :value])
+  end
+end
+
 defmodule Launcher.Job do
   use Ecto.Schema
   import Ecto.Changeset
@@ -25,7 +44,7 @@ defmodule Launcher.Job do
     field :run_at_load, :boolean
     # field :arguments, {:array, :string}
     embeds_many :arguments, Argument
-    field :environment_variables, {:array, :string}
+    embeds_many :environment_variables, EnvironmentVariable
     field :working_directory, :string
     field :start_interval, :integer
     field :keepalive, :boolean
@@ -41,7 +60,6 @@ defmodule Launcher.Job do
       :label,
       :program,
       :run_at_load,
-      :environment_variables,
       :working_directory,
       :start_interval,
       :keepalive,
@@ -50,6 +68,7 @@ defmodule Launcher.Job do
       :standard_error_path
     ])
     |> cast_embed(:arguments)
+    |> cast_embed(:environment_variables)
     |> validate_required([:label, :program])
   end
 end
