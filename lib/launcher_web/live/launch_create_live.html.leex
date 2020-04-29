@@ -1,6 +1,12 @@
 <section class="row">
   <section class="column">
-    <a href="/">launchctl status dashboard</a>
+    <%= if @xml_string != "" do %>
+    <pre><code>
+      <%= @xml_string %>
+    </code></pre>
+    <% end %>
+  </section>
+  <section class="column">
 
     <%= f = form_for @changeset, "#", [phx_change: :validate, phx_submit: :save] %>
 
@@ -13,59 +19,78 @@
       <%= error_tag f, :program %>
 
       <%= for arguments_form <- inputs_for(f, :arguments) do %>
-        <a href="#" phx-click="remove-arg" phx-value-id="<%= input_id(arguments_form, :value) %>">
-          remove arg
-        </a>
-        <%= label arguments_form, :argument %>
-        <%= text_input arguments_form, :value %>
-        <%= hidden_inputs_for(arguments_form) %>
-        <%= error_tag arguments_form, :value %>
+        <%= label arguments_form, :argument do %>
+          Argument
+          <a href="#" phx-click="remove-arg" phx-value-id="<%= input_id(arguments_form, :value) %>">
+            remove
+          </a>
+          <%= text_input arguments_form, :value %>
+          <%= hidden_inputs_for(arguments_form) %>
+          <%= error_tag arguments_form, :value %>
+        <% end %>
       <% end %>
 
       <div>
         <a href="#" phx-click="add-arg">add arg</a>
       </div>
 
-      <br />
+      <hr />
 
       <div>
-      <%= label f, :run_at_load %>
-      <%= checkbox(f, :run_at_load) %>
-      <%= error_tag f, :run_at_load %>
+        <%= label f, :run_at_load do %>
+          Run at load
+          <%= checkbox(f, :run_at_load) %>
+          <%= error_tag f, :run_at_load %>
+        <% end %>
 
-      <%= label f, :keepalive %>
-      <%= checkbox(f, :keepalive) %>
-      <%= error_tag f, :keepalive %>
+        <%= label f, :keepalive do %>
+          Keepalive
+          <%= checkbox(f, :keepalive) %>
+          <%= error_tag f, :keepalive %>
+        <% end %>
       </div>
 
+      <hr />
+
       <div>
-      <%= label f, :standard_in_path %>
-      <%= text_input f, :standard_in_path %>
-      <%= error_tag f, :standard_in_path %>
+      <%= label f, :standard_in_path do %>
+        Stdin path
+        <%= text_input f, :standard_in_path %>
+        <%= error_tag f, :standard_in_path %>
+      <% end %>
 
-      <%= label f, :standard_out_path %>
-      <%= text_input f, :standard_out_path %>
-      <%= error_tag f, :standard_out_path %>
+      <%= label f, :standard_out_path do %>
+        Stdout path
+        <%= text_input f, :standard_out_path %>
+        <%= error_tag f, :standard_out_path %>
+      <% end %>
 
-      <%= label f, :standard_error_path %>
-      <%= text_input f, :standard_error_path %>
-      <%= error_tag f, :standard_error_path %>
+      <%= label f, :standard_error_path do %>
+        Stderr path
+        <%= text_input f, :standard_error_path %>
+        <%= error_tag f, :standard_error_path %>
+      <% end %>
+
+      <hr />
 
       <%= for environment_variables_form <- inputs_for(f, :environment_variables) do %>
-        <a href="#" phx-click="remove-environment-variable" phx-value-id="<%= input_id(environment_variables_form, :value) %>">
-          remove envvar
-        </a>
-        <%= label environment_variables_form, :environment_variable %>
+        <%= label environment_variables_form, :environment_variable do %>
+          Environment Variable
 
-        <%= label environment_variables_form, :key %>
-        <%= text_input environment_variables_form, :key %>
-        <%= hidden_inputs_for(environment_variables_form) %>
-        <%= error_tag environment_variables_form, :key %>
+          <a href="#" phx-click="remove-environment-variable" phx-value-id="<%= input_id(environment_variables_form, :value) %>">
+            remove
+          </a>
 
-        <%= label environment_variables_form, :value %>
-        <%= text_input environment_variables_form, :value %>
-        <%= hidden_inputs_for(environment_variables_form) %>
-        <%= error_tag environment_variables_form, :value %>
+          <%= label environment_variables_form, :key %>
+          <%= text_input environment_variables_form, :key %>
+          <%= hidden_inputs_for(environment_variables_form) %>
+          <%= error_tag environment_variables_form, :key %>
+
+          <%= label environment_variables_form, :value %>
+          <%= text_input environment_variables_form, :value %>
+          <%= hidden_inputs_for(environment_variables_form) %>
+          <%= error_tag environment_variables_form, :value %>
+        <% end %>
       <% end %>
 
       <div>
@@ -78,16 +103,5 @@
       </div>
 
     </form>
-
-  </section>
-</section>
-
-<section class="row">
-  <section class="column">
-    <%= if @xml_string != "" do %>
-    <pre><code>
-      <%= @xml_string %>
-    </code></pre>
-    <% end %>
   </section>
 </section>

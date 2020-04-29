@@ -1,6 +1,5 @@
 <section class="row">
   <section class="column">
-    <a href="/create">Create a launchctljob</a>
     <button phx-click="toggle-fs-polling">
       <%= if @timer do %>
         Stop polling
@@ -8,22 +7,43 @@
         Start polling
       <% end %>
     </button>
-    <%= for %{filename: file, pid: pid, status: status, label: label} <- @launchd_files do %>
-       <div>
-         <a href="#" phx-click="inspect-file" phx-value-filename=<%= file %>><%= file %></a>
-         <ul>
-           <li>Pid: <%= pid %></li>
-           <li>Status: <%= status %></li>
-           <li>Label: <%= label %></li>
-         </ul>
-       </div>
-       <%= if file_data = Map.get(@unfold_map, file) do %>
-         <div>
-           <pre><code>
-           <%= file_data %>
-           </code></pre>
-         </div>
-       <% end %>
-    <% end %>
+
+    <table>
+      <thead>
+        <tr>
+          <th>pid</th>
+          <th>status</th>
+          <th>label</th>
+          <th>filename</th>
+        </tr>
+      </thead>
+      <tbody>
+      <%= for %{filename: file, pid: pid, status: status, label: label} <- @launchd_files do %>
+        <tr>
+          <td>
+            <%= pid %>
+          </td>
+          <td>
+            <%= status %>
+          </td>
+          <td>
+            <a href="#" phx-click="inspect-file" phx-value-filename=<%= file %>><%= file %></a>
+          </td>
+          <td>
+            <%= file %>
+          </td>
+        </tr>
+        <%= if file_data = Map.get(@unfold_map, file) do %>
+        <tr>
+          <td colspan="4">
+            <pre><code>
+            <%= file_data %>
+            </code></pre>
+          </td>
+        </tr>
+        <% end %>
+      <% end %>
+      </tbody>
+    </table>
   </section>
 </section>

@@ -2,6 +2,11 @@
 @import "./phoenix.css";
 @import "../node_modules/nprogress/nprogress.css";
 
+pre {
+    white-space: pre-wrap;
+}
+
+
 /* LiveView specific classes for your customizations */
 .invalid-feedback {
   color: #a94442;
