@@ -15,6 +15,7 @@
           <th>status</th>
           <th>label</th>
           <th>filename</th>
+          <th>operations</th>
         </tr>
       </thead>
       <tbody>
@@ -27,10 +28,18 @@
             <%= status %>
           </td>
           <td>
-            <a href="#" phx-click="inspect-file" phx-value-filename=<%= file %>><%= file %></a>
+            <a href="#" phx-click="inspect-file" phx-value-filename=<%= file %>><%= label %></a>
           </td>
           <td>
             <%= file %>
+          </td>
+          <td>
+            <%= if pid do %>
+              <a href="#" phx-click="unload-service" phx-value-filename=<%= file %>>stop</a>
+              <a href="#" phx-click="reload-service" phx-value-label=<%= label %>>restart</a>
+            <% else %>
+              <a href="#" phx-click="load-service" phx-value-filename=<%= file %>>start</a>
+            <% end %>
           </td>
         </tr>
         <%= if file_data = Map.get(@unfold_map, file) do %>

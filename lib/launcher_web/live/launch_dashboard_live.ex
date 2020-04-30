@@ -2,6 +2,7 @@ defmodule LauncherWeb.LaunchDashboardLive do
   use LauncherWeb, :live_view
   alias Launcher.{Job, Jobs}
   import SweetXml
+  require Logger
 
   @default_tick_interval :timer.seconds(5)
   @user_launchagents_path Application.fetch_env!(:launcher, :user_launchagents_path)
@@ -14,13 +15,16 @@ defmodule LauncherWeb.LaunchDashboardLive do
         :timer.send_interval(@default_tick_interval, self(), :fs_poll_tick)
       end
 
+    user_id = get_current_user_id()
+
     socket =
       socket
       |> assign(
         timer: timer,
         launchd_files: [],
         changeset: Jobs.change_job(%Job{}),
-        unfold_map: %{}
+        unfold_map: %{},
+        user_id: user_id
       )
 
     {:ok, socket}
@@ -50,6 +54,69 @@ defmodule LauncherWeb.LaunchDashboardLive do
       end
 
     socket = assign(socket, unfold_map: unfold_map)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("unload-service", %{"filename" => filename}, socket) do
+    cmd_result =
+      System.cmd("launchctl", ["unload", "-w", Path.join(@user_launchagents_path, filename)],
+        stderr_to_stdout: true
+      )
+
+    socket =
+      case cmd_result do
+        {out, 0} ->
+          Logger.debug("output from stopping #{filename}: #{out}")
+          socket
+
+        {error, code} ->
+          socket
+          |> put_flash(:error, "#{error}")
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("load-service", %{"filename" => filename}, socket) do
+    cmd_result =
+      System.cmd("launchctl", ["load", "-w", Path.join(@user_launchagents_path, filename)])
+
+    socket =
+      case cmd_result do
+        {out, 0} ->
+          Logger.debug("output from starting #{filename}: #{out}")
+          socket
+
+        {error, code} ->
+          socket
+          |> put_flash(:error, "#{error}")
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("reload-service", %{"label" => label}, socket) do
+    cmd_result =
+      System.cmd("launchctl", [
+        "kickstart",
+        "-k",
+        Path.join(["gui", socket.assigns.user_id, label])
+      ])
+
+    socket =
+      case cmd_result do
+        {out, 0} ->
+          Logger.debug("output from restartiing #{label}: #{out}")
+          socket
+
+        {error, code} ->
+          socket
+          |> put_flash(:error, "#{error}")
+      end
 
     {:noreply, socket}
   end
@@ -129,5 +196,10 @@ defmodule LauncherWeb.LaunchDashboardLive do
         socket
         |> put_flash(:error, "put_launchd_files: #{reason}")
     end
+  end
+
+  def get_current_user_id() do
+    {user_id, 0} = System.cmd("id", ["-u"])
+    String.trim(user_id)
   end
 end

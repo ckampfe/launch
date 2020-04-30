@@ -40,7 +40,6 @@ defmodule LauncherWeb.LaunchCreateLive do
       |> Launcher.Jobs.change_job(attrs)
       # this has to be here for errors to render
       |> Map.put(:action, :insert)
-      |> IO.inspect(label: "CS")
 
     if changeset.valid? do
       socket =
@@ -60,7 +59,6 @@ defmodule LauncherWeb.LaunchCreateLive do
       %Job{}
       |> Launcher.Jobs.change_job(attrs)
       |> Map.put(:action, :insert)
-      |> IO.inspect(label: "CS insert")
 
     job_write_path = Path.join(@user_launchagents_path, "#{changeset.changes.label}.plist")
 
